@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Convertify</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2317171a'/%3E%3Cpath d='M9 16h14m-5-5 5 5-5 5' stroke='%23fff' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#f7f6f3;--surface:#fff;--ink:#17171a;--mute:#6f6e6a;--line:#e4e2dc;--on:#fff;--warn:#8a5200;--warnbg:#fbf3e2;--err:#b3261e;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#121211;--surface:#1b1b1a;--ink:#f0efeb;--mute:#8d8c86;--line:#2e2d2a;--on:#121211;--warn:#e0b05a;--warnbg:#2a2415;--err:#f2867e}}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+body{font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding:56px 20px;display:flex;justify-content:center;-webkit-font-smoothing:antialiased}
+main{width:100%;max-width:520px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:24px}
+h1{font-size:18px;font-weight:650;letter-spacing:-.015em}
+header span{color:var(--mute);font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+#drop{display:block;padding:48px 24px;text-align:center;border-style:dashed;cursor:pointer;transition:border-color .15s,transform .15s}
+#drop:hover,#drop.over{border-color:var(--ink)}
+#drop.over{transform:scale(1.01)}
+#drop b{display:block;font-weight:560;font-size:16px;margin-bottom:2px}
+#drop small,.hint,#fmeta,.stat{color:var(--mute);font-size:13px}
+.file{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px}
+.file>div:first-child{min-width:0}
+#fname{font-weight:560;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+button{font:inherit;color:inherit;cursor:pointer}
+#clear{border:0;background:none;font-size:22px;line-height:1;color:var(--mute);padding:4px 8px;border-radius:8px}
+#clear:hover{color:var(--ink);background:var(--bg)}
+.lbl{font-size:12px;color:var(--mute);margin:22px 0 8px;letter-spacing:.04em;text-transform:uppercase}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pills button{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:6px 13px;font-size:14px;transition:border-color .12s}
+.pills button:hover{border-color:var(--mute)}
+.pills button.on{background:var(--ink);color:var(--on);border-color:var(--ink)}
+.cmp{margin-top:16px;padding:0 16px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;cursor:pointer}
+#cbody{padding:2px 0 16px;display:grid;gap:12px}
+input[type=checkbox]{appearance:none;width:34px;height:20px;border-radius:10px;background:var(--line);position:relative;cursor:pointer;transition:background .15s;flex:none}
+input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--surface);transition:transform .15s;box-shadow:0 1px 2px #0003}
+input[type=checkbox]:checked{background:var(--ink)}
+input[type=checkbox]:checked::after{transform:translateX(14px)}
+select,input[type=number]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0}
+select:focus,input:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.t{display:flex;gap:8px}.t input{flex:1}
+.note{margin-top:14px;padding:10px 13px;border-radius:10px;font-size:13.5px;background:var(--bg);border:1px solid var(--line);color:var(--mute)}
+.note.warn{background:var(--warnbg);color:var(--warn);border-color:transparent}
+.note.err{color:var(--err)}
+.primary{width:100%;margin-top:20px;padding:13px;border:0;border-radius:11px;background:var(--ink);color:var(--on);font-weight:580;transition:opacity .15s}
+.primary:hover{opacity:.88}.primary:disabled{opacity:.4;cursor:default}
+#prog{height:3px;background:var(--line);border-radius:3px;margin-top:14px;overflow:hidden}
+#prog i{display:block;height:100%;width:0;background:var(--ink);transition:width .2s}
+#status{font-size:13px;color:var(--mute);margin-top:8px;min-height:20px}
+#done{margin-top:24px;padding:16px}
+#pv{display:grid;place-items:center;background:var(--bg);border-radius:10px;overflow:hidden;min-height:90px;padding:8px}
+#pv img,#pv video{max-width:100%;max-height:320px;border-radius:6px;display:block}
+#pv audio{width:100%}
+.stat{display:flex;justify-content:space-between;margin:12px 0 4px;font-variant-numeric:tabular-nums}
+.stat b{color:var(--ink);font-weight:560}
+#locs .hint{margin-top:8px}
+footer{margin-top:36px;text-align:center;font-size:12px;color:var(--mute)}
+</style>
+</head>
+<body>
+<main>
+<header><h1>Convertify</h1><span>Runs on your device. Nothing is uploaded.</span></header>
+
+<label id="drop" class="card"><input id="file" type="file" hidden><b>Drop a file here</b><small>or click to browse · images, audio, video</small></label>
+
+<section id="work" hidden>
+  <div class="card file"><div><div id="fname"></div><div id="fmeta"></div></div><button id="clear" title="Remove file" aria-label="Remove file">×</button></div>
+  <p id="mismatch" class="note" hidden></p>
+  <div class="lbl">Convert to</div><div id="fmts" class="pills"></div>
+  <div class="card cmp"><label class="row"><span>Compress</span><input type="checkbox" id="cz"></label><div id="cbody" hidden></div></div>
+  <p id="warn" class="note warn" hidden></p>
+  <button id="go" class="primary">Convert</button>
+  <div id="prog" hidden><i></i></div><p id="status" role="status"></p>
+</section>
+
+<section id="done" class="card" hidden>
+  <div id="pv"></div>
+  <div class="stat"><span id="sizes"></span><b id="delta"></b></div>
+  <div id="locs">
+    <div class="lbl">Save to</div><div class="pills" id="locp"></div><p class="hint" id="lochint"></p>
+  </div>
+  <button id="save" class="primary">Save file</button>
+</section>
+<footer>Large files are read and processed in small pieces to keep your device responsive.</footer>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const FMT={image:{png:'PNG',jpg:'JPG',webp:'WebP',avif:'AVIF',bmp:'BMP',gif:'GIF',tiff:'TIFF',ico:'ICO'},audio:{mp3:'MP3',wav:'WAV',ogg:'OGG',opus:'Opus',m4a:'M4A',flac:'FLAC',aac:'AAC'},video:{mp4:'MP4',webm:'WebM',mov:'MOV',mkv:'MKV',avi:'AVI'}};
+const MIME={png:'image/png',jpg:'image/jpeg',webp:'image/webp',avif:'image/avif',bmp:'image/bmp',gif:'image/gif',tiff:'image/tiff',ico:'image/x-icon',mp3:'audio/mpeg',wav:'audio/wav',ogg:'audio/ogg',opus:'audio/ogg',m4a:'audio/mp4',flac:'audio/flac',aac:'audio/aac',mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',mkv:'video/x-matroska',avi:'video/x-msvideo'};
+const VC={mp4:['libx264','aac'],mov:['libx264','aac'],mkv:['libx264','aac'],webm:['libvpx','libvorbis'],avi:['mpeg4','libmp3lame']};
+const AC={mp3:'libmp3lame',wav:'pcm_s16le',ogg:'libvorbis',opus:'libopus',m4a:'aac',flac:'flac',aac:'aac'};
+const LOSSLESS=['wav','flac'];
+const RES={image:[0,3840,2560,1920,1280,960,640],video:[0,1080,720,480,360,240],audio:[320,256,192,128,96,64,48,32]};
+const fmt=b=>b>=1e9?(b/1e9).toFixed(2)+' GB':b>=1e6?(b/1e6).toFixed(1)+' MB':Math.max(1,Math.round(b/1e3))+' KB';
+const ua=navigator.userAgent,os=/CrOS/.test(ua)?'cros':/Windows/.test(ua)?'win':/Mac/.test(ua)?'mac':'other';
+const L2={cros:['Google Drive','Pick Google Drive in the sidebar of the save dialog.'],win:['OneDrive','Pick OneDrive in the sidebar of the save dialog.'],mac:['iCloud Drive','Pick iCloud Drive in the sidebar of the save dialog.'],other:['Choose folder','A save dialog lets you pick any folder.']}[os];
+const canEnc=t=>{try{return document.createElement('canvas').toDataURL(t).startsWith('data:'+t)}catch{return false}};
+let file,cat,label,ext,blob,mode='a',rv=0,tv=null,tu=1e6,loc='dl',ff,ffLog='';
+try{loc=localStorage.getItem('cv-loc')||'dl'}catch{}
+
+/* ---------- file intake ---------- */
+async function sniff(f){
+  const b=new Uint8Array(await f.slice(0,64).arrayBuffer()),a=(o,t)=>[...t].every((c,i)=>b[o+i]===c.charCodeAt(0));
+  if(a(0,'\x89PNG'))return['image','PNG'];
+  if(b[0]===255&&b[1]===216)return['image','JPEG'];
+  if(a(0,'GIF8'))return['image','GIF'];
+  if(a(0,'BM'))return['image','BMP'];
+  if(a(0,'II*\0')||a(0,'MM\0*'))return['image','TIFF'];
+  if(a(0,'RIFF')){if(a(8,'WEBP'))return['image','WebP'];if(a(8,'WAVE'))return['audio','WAV'];if(a(8,'AVI '))return['video','AVI'];}
+  if(a(4,'ftyp')){const br=String.fromCharCode(...b.slice(8,12));
+    if(/^avi[fs]/.test(br))return['image','AVIF'];if(/^(heic|heix|mif1)/.test(br))return['image','HEIC'];
+    if(/^M4[AB] /.test(br))return['audio','M4A'];return['video',br==='qt  '?'MOV':'MP4']}
+  if(a(0,'\x1aE\xdf\xa3'))return['video','WebM/MKV'];
+  if(a(0,'OggS'))return['audio','OGG'];
+  if(a(0,'fLaC'))return['audio','FLAC'];
+  if(a(0,'ID3')||(b[0]===255&&(b[1]&224)===224))return['audio','MP3'];
+  const t=f.type.split('/')[0];return[['image','audio','video'].includes(t)?t:null,(f.name.split('.').pop()||'').toUpperCase()];
+}
+async function load(f){
+  reset();const[c,l]=await sniff(f);
+  if(!c){return flash('That file type isn’t supported. Try an image, audio or video file.')}
+  file=f;cat=c;label=l;$('#drop').hidden=true;$('#work').hidden=false;
+  $('#fname').textContent=f.name;$('#fmeta').textContent=`${fmt(f.size)} · ${l} ${c}`;
+  const e=(f.name.split('.').pop()||'').toLowerCase(),n={jpg:'jpeg',tif:'tiff',mkv:'webm/mkv',webm:'webm/mkv',oga:'ogg',m4v:'mp4',qt:'mov'}[e]||e,mm=$('#mismatch');
+  mm.hidden=l.toLowerCase().includes(n)||!f.name.includes('.');
+  mm.textContent=`This file is named .${e} but its contents are ${l}. Convertify goes by the contents, so converting will produce a genuine file.`;
+  const keys=Object.keys(FMT[c]).filter(k=>k==='webp'||k==='avif'?canEnc(MIME[k]):1),cur=l.toLowerCase();
+  ext=keys.find(k=>!cur.startsWith(k==='jpg'?'jpeg':k))||keys[0];
+  $('#fmts').innerHTML=keys.map(k=>`<button data-k="${k}">${FMT[c][k]}</button>`).join('');
+  rv=c==='audio'?128:0;tv=null;mode='a';markFmt();renderC();
+  if(f.size>1.5e9&&c!=='image')showWarn('This file is very large. Conversion may fail on devices with limited memory.');
+}
+function flash(m){const w=$('#warn');w.hidden=false;w.className='note err';w.textContent=m;$('#work').hidden=true;$('#drop').hidden=false;$('#warn').after&&$('#drop').after(w)}
+function reset(){blob=null;$('#done').hidden=true;$('#warn').hidden=true;$('#warn').className='note warn';$('#work').append($('#warn'));$('#work').insertBefore($('#warn'),$('#go'));$('#status').textContent='';$('#prog').hidden=true}
+$('#file').onchange=e=>e.target.files[0]&&load(e.target.files[0]);
+$('#clear').onclick=()=>{reset();file=null;$('#file').value='';$('#work').hidden=true;$('#drop').hidden=false};
+const dz=$('#drop');
+['dragenter','dragover'].forEach(t=>addEventListener(t,e=>{e.preventDefault();dz.classList.add('over')}));
+['dragleave','drop'].forEach(t=>addEventListener(t,e=>{e.preventDefault();dz.classList.remove('over')}));
+addEventListener('drop',e=>e.dataTransfer.files[0]&&load(e.dataTransfer.files[0]));
+
+/* ---------- format + compression UI ---------- */
+function markFmt(){document.querySelectorAll('#fmts button').forEach(b=>b.classList.toggle('on',b.dataset.k===ext))}
+$('#fmts').onclick=e=>{const k=e.target.dataset.k;if(!k)return;ext=k;markFmt();$('#done').hidden=true;renderC()};
+$('#cz').onchange=()=>{$('#cbody').hidden=!$('#cz').checked;renderC()};
+function opts(){
+  const on=$('#cz').checked&&!(cat==='audio'&&LOSSLESS.includes(ext));
+  return{on,mode,res:rv,T:(+($('#tv')?.value??tv)||0)*tu}
+}
+function renderC(){
+  const el=$('#cbody');$('#cbody').hidden=!$('#cz').checked;
+  if(cat==='audio'&&LOSSLESS.includes(ext)){el.innerHTML='<p class="hint">Lossless formats can’t be compressed this way. Choose MP3, Opus, AAC, M4A or OGG to reduce size.</p>';return preWarn()}
+  if(tv==null){if(file.size>=2e6){tv=+(file.size/2e6).toFixed(1);tu=1e6}else{tv=Math.max(1,Math.round(file.size/2e3));tu=1e3}}
+  const lb=v=>cat==='audio'?v+' kbps':!v?'Original size':cat==='video'?v+'p':v+' px, longest side';
+  el.innerHTML=`<div class="pills"><button data-m="a" class="${mode==='a'?'on':''}">${cat==='audio'?'Bitrate':'Resolution'}</button><button data-m="t" class="${mode==='t'?'on':''}">Target size</button></div>`+
+  (mode==='a'?`<select id="rs">${RES[cat].map(v=>`<option value="${v}"${v===rv?' selected':''}>${lb(v)}</option>`).join('')}</select>`
+  :`<div class="t"><input id="tv" type="number" min="1" step="any" value="${tv}"><select id="tu"><option value="1000"${tu===1e3?' selected':''}>KB</option><option value="1000000"${tu===1e6?' selected':''}>MB</option></select></div><p class="hint">Original: ${fmt(file.size)}. Convertify lowers quality and size automatically to get under this.</p>`);
+  preWarn();
+}
+$('#cbody').onclick=e=>{const m=e.target.dataset.m;if(m){mode=m;renderC()}};
+$('#cbody').oninput=e=>{if(e.target.id==='rs')rv=+e.target.value;if(e.target.id==='tv')tv=+e.target.value;if(e.target.id==='tu')tu=+e.target.value;preWarn()};
+function showWarn(m){const w=$('#warn');w.hidden=!m;w.className='note warn';w.innerHTML=Array.isArray(m)?m.join('<br>'):m||''}
+function preWarn(){
+  const o=opts(),w=[];
+  if(o.on&&o.mode==='t'&&o.T){if(o.T>=file.size)w.push('That target isn’t smaller than the original file.');else if(o.T<file.size*.05)w.push('That’s under 5% of the original size. Expect heavy quality loss, and the target may not be reachable.')}
+  if(o.on&&o.mode==='a'&&cat==='audio'&&o.res<=48)w.push('At this bitrate audio will sound muffled and speech may be hard to understand.');
+  showWarn(w);
+}
+
+/* ---------- engines ---------- */
+function setStatus(t){$('#status').textContent=t}
+function setProg(p){$('#prog i').style.width=Math.min(100,Math.max(0,p*100))+'%'}
+async function loadFF(){
+  if(ff)return ff;
+  setStatus('Loading converter engine (one-time download, cached afterwards)…');
+  const B='https://cdn.jsdelivr.net/npm/@ffmpeg/';
+  await new Promise((ok,no)=>{const s=document.createElement('script');s.src=B+'ffmpeg@0.12.10/dist/umd/ffmpeg.js';s.onload=ok;s.onerror=()=>no(Error('Couldn’t load the converter engine. Check your connection and try again.'));document.head.append(s)});
+  const blobURL=async(u,t)=>URL.createObjectURL(new Blob([await(await fetch(u)).arrayBuffer()],{type:t}));
+  const f=new FFmpegWASM.FFmpeg();
+  f.on('log',e=>ffLog+=e.message+'\n');f.on('progress',e=>setProg(e.progress));
+  await f.load({classWorkerURL:await blobURL(B+'ffmpeg@0.12.10/dist/umd/814.ffmpeg.js','text/javascript'),coreURL:await blobURL(B+'core@0.12.6/dist/umd/ffmpeg-core.js','text/javascript'),wasmURL:await blobURL(B+'core@0.12.6/dist/umd/ffmpeg-core.wasm','application/wasm')});
+  return ff=f;
+}
+/* audio, video, and the image formats the browser can't encode. The input is mounted lazily (read in pieces), never copied whole into memory. */
+async function viaFF(file,ext,cat,o){
+  const f=await loadFF(),w=[];setStatus('Reading file…');
+  await f.createDir('/in').catch(()=>{});
+  await f.mount('WORKERFS',{files:[new File([file],'in')]},'/in');
+  try{
+    ffLog='';await f.exec(['-i','/in/in']).catch(()=>{});
+    const dm=ffLog.match(/Duration: (\d+):(\d+):([\d.]+)/),dur=dm?(+dm[1])*3600+(+dm[2])*60+(+dm[3]):0,
+      vm=ffLog.match(/Video:.*?(\d{2,5})x(\d{2,5})/),sw=vm?+vm[1]:0,sh=vm?+vm[2]:0,fps=+((ffLog.match(/([\d.]+) fps/)||[])[1])||24,
+      T=o.on&&o.mode==='t'?o.T:0,res=o.on&&o.mode==='a'?o.res:0,a=['-i','/in/in'];
+    if(cat==='image'){
+      a.push('-frames:v','1','-vf',ext==='ico'?"scale='min(256,iw)':'min(256,ih)':force_original_aspect_ratio=decrease":res?`scale='if(gt(iw,ih),min(${res},iw),-2)':'if(gt(iw,ih),-2,min(${res},ih))'`:'null');
+    }else if(cat==='video'){
+      const[vc,ac]=VC[ext],H=res?Math.min(res,sh||res):sh;let vb=0,ab=128;
+      a.push('-map','0:v:0','-map','0:a:0?','-vf',res?`scale=-2:'min(${res},ih)'`:'scale=trunc(iw/2)*2:trunc(ih/2)*2','-c:v',vc,'-c:a',ac);
+      if(T&&!dur)w.push('Couldn’t read the video length, so the target size was ignored.');
+      if(T&&dur){const tot=T*8/dur/1000;ab=Math.round(Math.min(128,Math.max(24,tot*.12)));vb=Math.floor(tot*.95-ab);
+        if(vb<40){vb=40;w.push('That size is too small for a video this long. It will come out larger than the target.')}
+        if(sh&&vb*1000/((sw*H/sh)*H*fps)<.03)w.push('Very heavy compression: expect blocky video that may be unwatchable. Lowering the resolution as well will help.')}
+      if(vc==='libx264')a.push('-preset','veryfast','-pix_fmt','yuv420p',...(vb?['-b:v',vb+'k','-maxrate',Math.round(vb*1.5)+'k','-bufsize',vb*3+'k']:['-crf','25']));
+      else if(vc==='libvpx')a.push('-deadline','realtime','-cpu-used','8','-b:v',(vb||2000)+'k');
+      else a.push('-b:v',(vb||2500)+'k');
+      a.push('-b:a',ab+'k');if(ext==='mp4'||ext==='mov')a.push('-movflags','+faststart');
+    }else{
+      let kb=o.on&&o.mode==='a'?o.res:ext==='opus'?128:192;
+      if(T&&!dur)w.push('Couldn’t read the audio length, so the target size was ignored.');
+      if(T&&dur){const mn=ext==='mp3'?32:16;kb=Math.min(320,Math.floor(T*8/dur/1000*.97));if(kb<mn){kb=mn;w.push('That size is too small for audio this long. It will come out larger than the target.')}}
+      if(kb<48)w.push('Very low bitrate: expect muffled audio that may be hard to understand.');
+      a.push('-vn','-c:a',AC[ext]);if(!LOSSLESS.includes(ext))a.push('-b:a',kb+'k');
+    }
+    setStatus('Converting…');setProg(0);
+    const out='out.'+ext;
+    if(await f.exec([...a,'-y',out])!==0)throw Error('This file couldn’t be converted. It may be damaged or use a codec this engine doesn’t support.');
+    const d=await f.readFile(out);await f.deleteFile(out);
+    return{blob:new Blob([d],{type:MIME[ext]}),warn:w};
+  }finally{await f.unmount('/in').catch(()=>{})}
+}
+function bmp(c){
+  const w=c.width,h=c.height,n=w*h*4,u=new Uint8Array(54+n),v=new DataView(u.buffer),x=c.getContext('2d');
+  u[0]=66;u[1]=77;v.setUint32(2,54+n,true);v.setUint32(10,54,true);v.setUint32(14,40,true);v.setInt32(18,w,true);v.setInt32(22,-h,true);v.setUint16(26,1,true);v.setUint16(28,32,true);v.setUint32(34,n,true);
+  for(let y=0;y<h;y+=256){const d=x.getImageData(0,y,w,Math.min(256,h-y)).data,o=54+y*w*4;for(let i=0;i<d.length;i+=4){u[o+i]=d[i+2];u[o+i+1]=d[i+1];u[o+i+2]=d[i];u[o+i+3]=d[i+3]}}
+  return new Blob([u],{type:'image/bmp'});
+}
+async function viaCanvas(file,ext,o){
+  let bm;try{bm=await createImageBitmap(file)}catch{bm=await createImageBitmap((await viaFF(file,'png','image',{})).blob)}
+  const W=bm.width,H=bm.height,w=[],T=o.on&&o.mode==='t'?o.T:0,lossy=['jpg','webp','avif'].includes(ext);
+  let s=Math.min(1,Math.sqrt(5e7/(W*H)));if(o.on&&o.mode==='a'&&o.res)s=Math.min(s,o.res/Math.max(W,H));
+  const enc=(s,q)=>new Promise((ok,no)=>{const c=document.createElement('canvas');c.width=Math.max(1,Math.round(W*s));c.height=Math.max(1,Math.round(H*s));
+    const x=c.getContext('2d');x.imageSmoothingQuality='high';if(ext==='jpg'){x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height)}x.drawImage(bm,0,0,c.width,c.height);
+    if(ext==='bmp')return ok(bmp(c));c.toBlob(b=>b&&b.type===MIME[ext]?ok(b):no(Error('Your browser can’t create '+ext.toUpperCase()+' files.')),MIME[ext],q)});
+  const q0=ext==='avif'?.8:.92;let b,q=q0;
+  if(T){
+    for(let i=0;i<8;i++){
+      if(lossy){let lo=.05,hi=.95,best=null;for(let k=0;k<7;k++){const m=(lo+hi)/2,t=await enc(s,m);setProg((i*7+k)/56);if(t.size<=T){best=t;lo=m}else hi=m}
+        if(best){b=best;q=lo;break}b=await enc(s,.05);q=.05;s*=.8}
+      else{b=await enc(s,1);if(b.size<=T)break;s*=Math.max(.3,Math.sqrt(T/b.size)*.95)}
+      if(s*Math.max(W,H)<48)break;
+    }
+    if(b.size>T*1.05)w.push(`Couldn’t reach ${fmt(T)} without making the image unusable. This is the smallest result (${fmt(b.size)}).`);
+    if((lossy&&q<.25)||s<.3)w.push('Heavy compression: the image may look blurry or blocky.');
+  }else b=await enc(s,q0);
+  if(s<1&&!T&&!(o.on&&o.res))w.push('Very large image: it was scaled down to keep your device stable.');
+  return{blob:b,warn:w};
+}
+
+/* ---------- convert + result ---------- */
+$('#go').onclick=async()=>{
+  const g=$('#go');g.disabled=true;$('#done').hidden=true;showWarn('');$('#prog').hidden=false;setProg(0);setStatus('Working…');
+  try{
+    const o=opts(),r=['gif','tiff','ico'].includes(ext)||cat!=='image'?await viaFF(file,ext,cat,o):await viaCanvas(file,ext,o),w=[...r.warn];
+    blob=r.blob;if(o.on&&o.mode==='t'&&o.T&&blob.size>o.T*1.1&&!w.some(x=>/too small|Couldn’t reach/.test(x)))w.push(`The result (${fmt(blob.size)}) ended up above your ${fmt(o.T)} target.`);
+    showWarn(w);showResult();
+  }catch(e){const x=$('#warn');x.hidden=false;x.className='note err';x.textContent=e.message||'Something went wrong.';if(/memory|alloc/i.test(x.textContent))x.textContent+=' Try a smaller file or compress it first.'}
+  g.disabled=false;$('#prog').hidden=true;setStatus('');
+};
+function showResult(){
+  const pv=$('#pv'),u=URL.createObjectURL(blob),el=document.createElement(cat==='image'?'img':cat);
+  if(cat!=='image')el.controls=true;el.src=u;
+  el.onerror=()=>pv.innerHTML=`<p class="hint">Your browser can’t preview .${ext} files, but the converted file is ready to save.</p>`;
+  pv.replaceChildren(el);
+  const d=Math.round((1-blob.size/file.size)*100);
+  $('#sizes').textContent=`${fmt(file.size)} → ${fmt(blob.size)}`;$('#delta').textContent=d>0?`${d}% smaller`:d<0?`${-d}% larger`:'Same size';
+  const can='showSaveFilePicker'in window,lp=$('#locp');
+  $('#locs').hidden=false;
+  if(can){lp.innerHTML=`<button data-l="dl">Downloads</button><button data-l="pick">${L2[0]}</button>`;markLoc()}
+  else{lp.innerHTML='';$('#lochint').textContent='Your browser saves converted files to its default Downloads folder.'}
+  $('#done').hidden=false;$('#done').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function markLoc(){document.querySelectorAll('#locp button').forEach(b=>b.classList.toggle('on',b.dataset.l===loc));$('#lochint').textContent=loc==='dl'?'Goes straight to your browser’s Downloads folder.':L2[1]}
+$('#locp').onclick=e=>{const l=e.target.dataset.l;if(!l)return;loc=l;try{localStorage.setItem('cv-loc',l)}catch{}markLoc()};
+$('#save').onclick=async()=>{
+  const name=file.name.replace(/\.[^.]*$/,'')+'.'+ext;
+  if(loc==='pick'&&'showSaveFilePicker'in window){
+    try{const h=await showSaveFilePicker({suggestedName:name,id:'convertify',startIn:'documents',types:[{description:ext.toUpperCase()+' file',accept:{[MIME[ext]]:['.'+ext]}}]});
+      const wr=await h.createWritable();
+      for(let i=0;i<blob.size;i+=8<<20)await wr.write(blob.slice(i,i+(8<<20)));
+      await wr.close();$('#save').textContent='Saved';setTimeout(()=>$('#save').textContent='Save file',1800)}
+    catch(e){if(e.name!=='AbortError')showWarn('Couldn’t save to that location. Try Downloads instead.')}
+    return;
+  }
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4e3);
+};
+</script>
+</body>
+</html>
